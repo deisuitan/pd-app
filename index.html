@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base href="/pd-app/">
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="腹膜透析記録アプリ">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="腹膜透析記録">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <link rel="icon" type="image/png" href="favicon.png"/>
+  <title>腹膜透析記録</title>
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Google Identity Services（Driveバックアップ用） -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script>
+    var _gisClient = null;
+    // コールバックをグローバル変数で管理する
+    // （GISはrequestAccessToken呼び出し時にcallback/error_callbackを上書きできないため）
+    var _gisTokenCallback = null;
+
+    function gisInit(clientId, scope) {
+      try {
+        if (!window.google || !window.google.accounts || !window.google.accounts.oauth2) {
+          return false;
+        }
+        _gisClient = google.accounts.oauth2.initTokenClient({
+          client_id: clientId,
+          scope: scope,
+          callback: function(response) {
+            if (_gisTokenCallback) {
+              var cb = _gisTokenCallback;
+              _gisTokenCallback = null;
+              cb(JSON.stringify(response));
+            }
+          },
+          error_callback: function(err) {
+            if (_gisTokenCallback) {
+              var cb = _gisTokenCallback;
+              _gisTokenCallback = null;
+              cb(JSON.stringify({ error: err.type || 'popup_error' }));
+            }
+          }
+        });
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function gisRequestToken(prompt, callback) {
+      if (!_gisClient) {
+        callback(JSON.stringify({ error: 'not_initialized' }));
+        return;
+      }
+      _gisTokenCallback = callback;
+      _gisClient.requestAccessToken({ prompt: prompt || '' });
+    }
+  </script>
+</head>
+<body>
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>
